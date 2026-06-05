@@ -3,7 +3,7 @@
 A RESTful API built with **Spring Boot** for managing products and reviews — with a simple frontend UI.
 
 ## 🛠️ Tech Stack
-Java 17 · Spring Boot 3.2 · Spring Data JPA · H2 Database · Swagger · HTML/CSS/JS
+Java 17 · Spring Boot 3.2 · Spring Data JPA · MySQL  · Swagger · HTML/CSS
 
 ## ✨ Features
 - Full CRUD for Products (Create, Read, Update, Delete)
@@ -21,7 +21,7 @@ Java 17 · Spring Boot 3.2 · Spring Data JPA · H2 Database · Swagger · HTML/
 |---|---|
 | Frontend | `http://localhost:8080` |
 | Swagger UI | `http://localhost:8080/swagger-ui/index.html` |
-| H2 Console | `http://localhost:8080/h2-console` |
+
 
 ## 📡 API Endpoints
 
