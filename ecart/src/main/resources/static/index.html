@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Product Catalog</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f9f9f7;
+      --surface: #ffffff;
+      --border: #e5e5e0;
+      --text: #1a1a18;
+      --muted: #6b6b66;
+      --accent: #1a1a18;
+      --tag-bg: #f0f0eb;
+      --danger: #c0392b;
+      --success: #27ae60;
+      --radius: 10px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.07);
+    }
+
+    body {
+      font-family: 'Georgia', serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      font-size: 1.1rem;
+      font-weight: bold;
+      letter-spacing: -0.5px;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      padding: 7px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-family: inherit;
+      transition: background 0.15s;
+    }
+    .btn:hover { background: var(--tag-bg); }
+    .btn-dark {
+      background: var(--text);
+      color: #fff;
+      border-color: var(--text);
+    }
+    .btn-dark:hover { background: #333; }
+    .btn-danger {
+      background: #fff0f0;
+      color: var(--danger);
+      border-color: #f5c6c6;
+    }
+    .btn-danger:hover { background: #ffe0e0; }
+
+    /* ── Layout ── */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    /* ── Search & Filter Bar ── */
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+      align-items: center;
+    }
+
+    .toolbar input, .toolbar select {
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      background: var(--surface);
+      color: var(--text);
+      font-family: inherit;
+      outline: none;
+    }
+    .toolbar input:focus, .toolbar select:focus {
+      border-color: #aaa;
+    }
+
+    .search-input { flex: 1; min-width: 180px; }
+
+    /* ── Product Grid ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1.25rem;
+    }
+
+    /* ── Product Card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: box-shadow 0.15s;
+    }
+    .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.10); }
+
+    .card-category {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .card-name {
+      font-size: 15px;
+      font-weight: bold;
+      line-height: 1.3;
+      color: var(--text);
+    }
+
+    .card-desc {
+      font-size: 12.5px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .card-price {
+      font-size: 17px;
+      font-weight: bold;
+      color: var(--text);
+      margin-top: 4px;
+    }
+
+    .card-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      padding-top: 8px;
+      margin-top: 4px;
+    }
+
+    .stars { color: #d4a017; letter-spacing: 1px; }
+
+    .card-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .card-actions .btn { flex: 1; font-size: 12px; padding: 6px 10px; text-align: center; }
+
+    .badge {
+      display: inline-block;
+      background: var(--tag-bg);
+      color: var(--muted);
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+
+    /* ── Empty State ── */
+    .empty {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--muted);
+      grid-column: 1 / -1;
+    }
+    .empty p { font-size: 15px; margin-top: 8px; }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 2rem;
+      width: 100%;
+      max-width: 480px;
+      border: 1px solid var(--border);
+    }
+
+    .modal h2 {
+      font-size: 17px;
+      margin-bottom: 1.25rem;
+      font-family: inherit;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12.5px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+    }
+    .form-group input:focus, .form-group textarea:focus {
+      border-color: #aaa;
+    }
+    .form-group textarea { resize: vertical; min-height: 72px; }
+
+    .form-row { display: flex; gap: 10px; }
+    .form-row .form-group { flex: 1; }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 1.25rem;
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: var(--text);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-size: 13px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.25s;
+      z-index: 300;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--danger); }
+
+    /* ── Section title ── */
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+    .section-header h1 {
+      font-size: 1.3rem;
+      font-weight: bold;
+    }
+    .product-count {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* ── Review modal detail ── */
+    .review-item {
+      border-top: 1px solid var(--border);
+      padding: 10px 0;
+      font-size: 13px;
+    }
+    .review-item:first-child { border-top: none; }
+    .review-comment { color: var(--muted); margin-top: 3px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="#">🛒 Product Catalog</a>
+  <div class="header-actions">
+    <button class="btn btn-dark" onclick="openAddModal()">+ Add Product</button>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <input class="search-input" type="text" id="searchInput" placeholder="Search by name or description..." />
+    <input type="text" id="categoryInput" placeholder="Category" style="width:130px" />
+    <input type="number" id="minPrice" placeholder="Min ₹" style="width:90px" />
+    <input type="number" id="maxPrice" placeholder="Max ₹" style="width:90px" />
+    <input type="number" id="minRating" placeholder="Rating ≥" step="0.1" min="1" max="5" style="width:90px" />
+    <button class="btn btn-dark" onclick="searchProducts()">Search</button>
+    <button class="btn" onclick="loadAllProducts()">Reset</button>
+  </div>
+
+  <!-- Section Header -->
+  <div class="section-header">
+    <h1>Products</h1>
+    <span class="product-count" id="productCount"></span>
+  </div>
+
+  <!-- Product Grid -->
+  <div class="grid" id="productGrid">
+    <div class="empty"><p>Loading products...</p></div>
+  </div>
+</div>
+
+<!-- ── Add / Edit Product Modal ── -->
+<div class="modal-overlay" id="productModal">
+  <div class="modal">
+    <h2 id="modalTitle">Add Product</h2>
+    <input type="hidden" id="productId" />
+    <div class="form-row">
+      <div class="form-group">
+        <label>Name *</label>
+        <input type="text" id="pName" placeholder="e.g. iPhone 16" />
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <input type="text" id="pCategory" placeholder="e.g. Smartphones" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Description *</label>
+      <textarea id="pDescription" placeholder="Brief product description"></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Price (₹) *</label>
+        <input type="number" id="pPrice" placeholder="e.g. 79999" />
+      </div>
+      <div class="form-group">
+        <label>Stock *</label>
+        <input type="number" id="pStock" placeholder="e.g. 100" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Seller</label>
+      <input type="text" id="pSeller" placeholder="e.g. Apple" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('productModal')">Cancel</button>
+      <button class="btn btn-dark" onclick="saveProduct()">Save Product</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Add Review Modal ── -->
+<div class="modal-overlay" id="reviewModal">
+  <div class="modal">
+    <h2>Add Review</h2>
+    <input type="hidden" id="reviewProductId" />
+    <div class="form-group">
+      <label>Rating (1 – 5) *</label>
+      <input type="number" id="rRating" min="1" max="5" step="0.5" placeholder="e.g. 4.5" />
+    </div>
+    <div class="form-group">
+      <label>Comment *</label>
+      <textarea id="rComment" placeholder="Write your review..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('reviewModal')">Cancel</button>
+      <button class="btn btn-dark" onclick="submitReview()">Submit Review</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+  const API = '/api';
+
+  // ── Helpers ────────────────────────────────────────────────
+
+  function showToast(msg, type = 'default') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + type;
+    setTimeout(() => { t.className = 'toast'; }, 2800);
+  }
+
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+  }
+
+  function starsHTML(rating) {
+    const full = Math.round(rating);
+    return '★'.repeat(full) + '☆'.repeat(5 - full);
+  }
+
+  function formatPrice(p) {
+    return '₹' + Number(p).toLocaleString('en-IN');
+  }
+
+  // ── Render ─────────────────────────────────────────────────
+
+  function renderProducts(products) {
+    const grid = document.getElementById('productGrid');
+    document.getElementById('productCount').textContent = products.length + ' product' + (products.length !== 1 ? 's' : '');
+
+    if (!products.length) {
+      grid.innerHTML = '<div class="empty"><p>No products found.</p></div>';
+      return;
+    }
+
+    grid.innerHTML = products.map(p => `
+      <div class="card">
+        <div class="card-category">${p.category || 'Uncategorised'}</div>
+        <div class="card-name">${p.name}</div>
+        <div class="card-desc">${p.description}</div>
+        <div class="card-price">${formatPrice(p.price)}</div>
+        <div class="card-meta">
+          <span class="stars">${starsHTML(p.ratings || 0)}</span>
+          <span>${p.ratings ? p.ratings.toFixed(1) : '0.0'} · ${p.numOfReviews || 0} reviews</span>
+        </div>
+        <div class="card-meta">
+          <span>Seller: ${p.seller || '—'}</span>
+          <span class="badge">Stock: ${p.stock}</span>
+        </div>
+        <div class="card-actions">
+          <button class="btn" onclick="openReviewModal(${p.id})">Review</button>
+          <button class="btn" onclick="openEditModal(${p.id})">Edit</button>
+          <button class="btn btn-danger" onclick="deleteProduct(${p.id})">Delete</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ── Load All ───────────────────────────────────────────────
+
+  async function loadAllProducts() {
+    clearSearchInputs();
+    try {
+      const res = await fetch(`${API}/products`);
+      const data = await res.json();
+      renderProducts(data);
+    } catch (e) {
+      showToast('Failed to load products', 'error');
+    }
+  }
+
+  function clearSearchInputs() {
+    ['searchInput','categoryInput','minPrice','maxPrice','minRating']
+      .forEach(id => document.getElementById(id).value = '');
+  }
+
+  // ── Search ─────────────────────────────────────────────────
+
+  async function searchProducts() {
+    const keyword   = document.getElementById('searchInput').value.trim();
+    const category  = document.getElementById('categoryInput').value.trim();
+    const minPrice  = document.getElementById('minPrice').value;
+    const maxPrice  = document.getElementById('maxPrice').value;
+    const minRating = document.getElementById('minRating').value;
+
+    const params = new URLSearchParams();
+    if (keyword)   params.append('keyword',   keyword);
+    if (category)  params.append('category',  category);
+    if (minPrice)  params.append('minPrice',  minPrice);
+    if (maxPrice)  params.append('maxPrice',  maxPrice);
+    if (minRating) params.append('minRating', minRating);
+
+    try {
+      const res = await fetch(`${API}/products/search?${params}`);
+      const data = await res.json();
+      renderProducts(data);
+    } catch (e) {
+      showToast('Search failed', 'error');
+    }
+  }
+
+  // ── Add Product ────────────────────────────────────────────
+
+  function openAddModal() {
+    document.getElementById('modalTitle').textContent = 'Add Product';
+    document.getElementById('productId').value = '';
+    ['pName','pCategory','pDescription','pPrice','pStock','pSeller']
+      .forEach(id => document.getElementById(id).value = '');
+    document.getElementById('productModal').classList.add('open');
+  }
+
+  // ── Edit Product ───────────────────────────────────────────
+
+  async function openEditModal(id) {
+    try {
+      const res = await fetch(`${API}/products/${id}`);
+      const p = await res.json();
+      document.getElementById('modalTitle').textContent = 'Edit Product';
+      document.getElementById('productId').value    = p.id;
+      document.getElementById('pName').value        = p.name || '';
+      document.getElementById('pCategory').value    = p.category || '';
+      document.getElementById('pDescription').value = p.description || '';
+      document.getElementById('pPrice').value       = p.price || '';
+      document.getElementById('pStock').value       = p.stock || '';
+      document.getElementById('pSeller').value      = p.seller || '';
+      document.getElementById('productModal').classList.add('open');
+    } catch (e) {
+      showToast('Could not load product', 'error');
+    }
+  }
+
+  // ── Save (Create or Update) ────────────────────────────────
+
+  async function saveProduct() {
+    const id   = document.getElementById('productId').value;
+    const body = {
+      name:        document.getElementById('pName').value.trim(),
+      category:    document.getElementById('pCategory').value.trim(),
+      description: document.getElementById('pDescription').value.trim(),
+      price:       parseFloat(document.getElementById('pPrice').value),
+      stock:       parseInt(document.getElementById('pStock').value),
+      seller:      document.getElementById('pSeller').value.trim(),
+    };
+
+    if (!body.name || !body.description || isNaN(body.price) || isNaN(body.stock)) {
+      showToast('Please fill in all required fields', 'error');
+      return;
+    }
+
+    const url    = id ? `${API}/products/${id}` : `${API}/products`;
+    const method = id ? 'PUT' : 'POST';
+
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        showToast(Object.values(err)[0] || 'Error saving product', 'error');
+        return;
+      }
+
+      closeModal('productModal');
+      showToast(id ? 'Product updated!' : 'Product added!', 'success');
+      loadAllProducts();
+    } catch (e) {
+      showToast('Failed to save product', 'error');
+    }
+  }
+
+  // ── Delete ─────────────────────────────────────────────────
+
+  async function deleteProduct(id) {
+    if (!confirm('Delete this product?')) return;
+    try {
+      await fetch(`${API}/products/${id}`, { method: 'DELETE' });
+      showToast('Product deleted', 'default');
+      loadAllProducts();
+    } catch (e) {
+      showToast('Delete failed', 'error');
+    }
+  }
+
+  // ── Review ─────────────────────────────────────────────────
+
+  function openReviewModal(productId) {
+    document.getElementById('reviewProductId').value = productId;
+    document.getElementById('rRating').value = '';
+    document.getElementById('rComment').value = '';
+    document.getElementById('reviewModal').classList.add('open');
+  }
+
+  async function submitReview() {
+    const productId = parseInt(document.getElementById('reviewProductId').value);
+    const rating    = parseFloat(document.getElementById('rRating').value);
+    const comment   = document.getElementById('rComment').value.trim();
+
+    if (isNaN(rating) || rating < 1 || rating > 5 || !comment) {
+      showToast('Please fill in rating (1–5) and comment', 'error');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API}/reviews`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId, rating, comment }),
+      });
+
+      if (!res.ok) {
+        showToast('Failed to submit review', 'error');
+        return;
+      }
+
+      closeModal('reviewModal');
+      showToast('Review submitted!', 'success');
+      loadAllProducts();
+    } catch (e) {
+      showToast('Error submitting review', 'error');
+    }
+  }
+
+  // ── Close on overlay click ─────────────────────────────────
+
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) overlay.classList.remove('open');
+    });
+  });
+
+  // ── Search on Enter ────────────────────────────────────────
+
+  document.getElementById('searchInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') searchProducts();
+  });
+
+  // ── Init ───────────────────────────────────────────────────
+
+  loadAllProducts();
+</script>
+</body>
+</html>
